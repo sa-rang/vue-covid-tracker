@@ -1,5 +1,5 @@
 <template>
-  <div style="height: 500px; width: 100%">
+  <div class="Map__container">
     <l-map
       v-if="showMap"
       :zoom="zoom"
@@ -76,7 +76,7 @@ export default {
         );
       } else {
         //console.log("default");
-        return latLng(47.41322, -1.219482);
+        return latLng(20, 77);
       }
     },
   },
@@ -96,11 +96,15 @@ export default {
 };
 </script>
 <style lang="scss">
-.leaflet-pane {
-  z-index: 2;
-}
-.leaflet-top,
-.leaflet-bottom {
-  z-index: 3;
+.Map__container {
+  height: 570px;
+  width: 100%;
+  .leaflet-pane {
+    z-index: 2 !important;
+  }
+  .leaflet-top,
+  .leaflet-bottom {
+    z-index: 3 !important;
+  }
 }
 </style>

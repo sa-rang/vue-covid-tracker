@@ -1,4 +1,3 @@
-import { Circle, Popup } from "leaflet";
 export const sortData = (data) => {
   const sortedData = [...data];
 
@@ -57,16 +56,3 @@ export const buildChartData = (data, casesType = "cases") => {
 //       <Popup>im a popup</Popup>
 //     </Circle>
 //   ));
-
-export const showDataOnMap = (data, casesType = "cases") =>
-  data.map((country) => (
-    <Circle
-      center={[country.countryInfo.lat, country.countryInfo.long]}
-      fillOpacity={0.4}
-      color={"#CC1034"}
-      fillColor={"#CC1034"}
-      radius={Math.sqrt(country[casesType]) * 800}
-    >
-      <Popup>im a popup</Popup>
-    </Circle>
-  ));

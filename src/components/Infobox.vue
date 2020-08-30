@@ -4,7 +4,7 @@
       <v-card :color="color" dark>
         <v-card-title class="headline">{{ title }}</v-card-title>
 
-        <v-card-subtitle>{{ cases }}</v-card-subtitle>
+        <v-card-subtitle>Today: {{ cases }}</v-card-subtitle>
         <v-card-subtitle>Total: {{ total }}</v-card-subtitle>
       </v-card>
     </v-col>
