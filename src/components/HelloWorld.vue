@@ -1,59 +1,137 @@
 <template>
-  <div class="hello">
-    <h1>{{ msg }}</h1>
-    <p>
-      For a guide and recipes on how to configure / customize this project,<br>
-      check out the
-      <a href="https://cli.vuejs.org" target="_blank" rel="noopener">vue-cli documentation</a>.
-    </p>
-    <h3>Installed CLI Plugins</h3>
-    <ul>
-      <li><a href="https://github.com/vuejs/vue-cli/tree/dev/packages/%40vue/cli-plugin-babel" target="_blank" rel="noopener">babel</a></li>
-      <li><a href="https://github.com/vuejs/vue-cli/tree/dev/packages/%40vue/cli-plugin-router" target="_blank" rel="noopener">router</a></li>
-      <li><a href="https://github.com/vuejs/vue-cli/tree/dev/packages/%40vue/cli-plugin-eslint" target="_blank" rel="noopener">eslint</a></li>
-    </ul>
-    <h3>Essential Links</h3>
-    <ul>
-      <li><a href="https://vuejs.org" target="_blank" rel="noopener">Core Docs</a></li>
-      <li><a href="https://forum.vuejs.org" target="_blank" rel="noopener">Forum</a></li>
-      <li><a href="https://chat.vuejs.org" target="_blank" rel="noopener">Community Chat</a></li>
-      <li><a href="https://twitter.com/vuejs" target="_blank" rel="noopener">Twitter</a></li>
-      <li><a href="https://news.vuejs.org" target="_blank" rel="noopener">News</a></li>
-    </ul>
-    <h3>Ecosystem</h3>
-    <ul>
-      <li><a href="https://router.vuejs.org" target="_blank" rel="noopener">vue-router</a></li>
-      <li><a href="https://vuex.vuejs.org" target="_blank" rel="noopener">vuex</a></li>
-      <li><a href="https://github.com/vuejs/vue-devtools#vue-devtools" target="_blank" rel="noopener">vue-devtools</a></li>
-      <li><a href="https://vue-loader.vuejs.org" target="_blank" rel="noopener">vue-loader</a></li>
-      <li><a href="https://github.com/vuejs/awesome-vue" target="_blank" rel="noopener">awesome-vue</a></li>
-    </ul>
-  </div>
+  <v-container fluid>
+    <!-- country selector -->
+
+    <v-row align="center">
+      <v-col class="d-flex" cols="12" sm="4" offset-sm="8">
+        <v-select
+          :items="countries"
+          item-text="name"
+          item-value="value"
+          solo
+          v-model="selectedCountry"
+          @change="changeCountry"
+        ></v-select>
+      </v-col>
+    </v-row>
+    <!-- infobox section -->
+
+    <v-row align="center" v-if="selectedCountryData">
+      <v-col class="d-flex" cols="12" sm="4">
+        <infobox
+          :title="'Coronavirus Cases'"
+          :cases="selectedCountryData.todayCases"
+          :total="selectedCountryData.cases"
+        />
+      </v-col>
+      <v-col class="d-flex" cols="12" sm="4">
+        <infobox
+          :title="'Recovered'"
+          :cases="selectedCountryData.todayRecovered"
+          :total="selectedCountryData.recovered"
+          :color="'#377b3a'"
+      /></v-col>
+      <v-col class="d-flex" cols="12" sm="4">
+        <infobox
+          :title="'Deaths'"
+          :cases="selectedCountryData.todayDeaths"
+          :total="selectedCountryData.deaths"
+          :color="'#9c1d1e'"
+      /></v-col>
+    </v-row>
+
+    <!-- bottom section -->
+    <v-row align="center" v-if="selectedCountryData">
+      <v-col class="d-flex" cols="12" sm="8"
+        ><Map :country-data="sortedCountryData" />
+      </v-col>
+      <v-col class="d-flex" cols="12" sm="4">
+        <v-row dense>
+          <v-col cols="12"><Table :table-data="sortedCountryData"/></v-col>
+          <v-col cols="12"> <Chart /></v-col>
+        </v-row>
+      </v-col>
+    </v-row>
+  </v-container>
 </template>
 
 <script>
+import axios from "axios";
+import { sortData } from "../utility/util";
+import Infobox from "./Infobox";
+import Table from "./Table";
+import Chart from "./Chart";
+import Map from "./Map";
+import { store } from "../store";
 export default {
-  name: 'HelloWorld',
-  props: {
-    msg: String
-  }
-}
-</script>
+  name: "HelloWorld",
+  components: {
+    Infobox,
+    Table,
+    Chart,
+    Map,
+  },
 
-<!-- Add "scoped" attribute to limit CSS to this component only -->
-<style scoped>
-h3 {
-  margin: 40px 0 0;
-}
-ul {
-  list-style-type: none;
-  padding: 0;
-}
-li {
-  display: inline-block;
-  margin: 0 10px;
-}
-a {
-  color: #42b983;
-}
-</style>
+  data() {
+    return {
+      countries: [],
+      selectedCountry: "worldwide",
+      selectedCountryData: null,
+      sortedCountryData: null,
+    };
+  },
+
+  mounted() {
+    //console.log("mounted");
+    this.getCountries();
+  },
+  methods: {
+    async getCountries() {
+      let config = {
+        headers: {
+          Accept: "application/json",
+        },
+      };
+
+      await axios
+        .get("https://disease.sh/v3/covid-19/countries", config)
+        .then((res) => {
+          const countries = res.data.map((eachCountry) => ({
+            name: eachCountry.country,
+            value: eachCountry.countryInfo.iso2,
+          }));
+          //console.log(countries);
+          let defaultCtr = {
+            name: "World Wide",
+            value: "worldwide",
+          };
+          this.countries = [defaultCtr].concat(countries);
+          this.setCountryData("worldwide");
+          const sortedData = sortData(res.data);
+          this.sortedCountryData = sortedData;
+        });
+    },
+    async setCountryData(countryCode) {
+      let config = {
+        headers: {
+          Accept: "application/json",
+        },
+      };
+
+      const url =
+        countryCode === "worldwide"
+          ? "https://disease.sh/v3/covid-19/all"
+          : `https://disease.sh/v3/covid-19/countries/${countryCode}`;
+      console.log(countryCode);
+      await axios.get(url, config).then((res) => {
+        this.selectedCountryData = res.data;
+        store.commit("setSelectedCountryData", res.data);
+        console.log(this.selectedCountryData);
+      });
+    },
+    changeCountry() {
+      this.setCountryData(this.selectedCountry);
+    },
+  },
+};
+</script>
